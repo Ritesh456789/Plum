@@ -9,7 +9,7 @@ This project parses natural language or document-based appointment requests into
 - **Timezone Handling**: dayjs
 - **File Upload**: Multer
 - **Validation**: Zod
-- **Frontend**: HTML5 + CSS3 (Modern Responsive UI)
+- **Frontend**: Pure JavaScript (Dynamic DOM Generation, No Static HTML/CSS)
 
 ## Features
 - **OCR**: Extracts text from uploaded images.
