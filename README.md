@@ -9,11 +9,13 @@ This project parses natural language or document-based appointment requests into
 - **Timezone Handling**: dayjs
 - **File Upload**: Multer
 - **Validation**: Zod
+- **Frontend**: HTML5 + CSS3 (Modern Responsive UI)
 
 ## Features
 - **OCR**: Extracts text from uploaded images.
 - **Entity Extraction**: Identifies department (e.g., Dentist) and date/time (e.g., "next Friday at 3pm").
 - **Normalization**: Converts extracted times to ISO format in `Asia/Kolkata`.
+- **Pipeline Visibility**: Returns detailed intermediate steps (OCR -> Entities -> Normalization) for verification.
 - **Guardrails**: Returns "needs_clarification" if input is ambiguous.
 
 ## Installation
@@ -30,7 +32,13 @@ Start the server:
 npm start
 ```
 
-The API will be available at `http://localhost:3000`.
+The application will be available at `http://localhost:3000`.
+
+### Web Interface
+Visit `http://localhost:3000` to use the built-in UI:
+- **Clean, Modern Design**: Responsive interface for testing.
+- **Pipeline View**: See exactly how the AI processes your request step-by-step.
+- **Dual Input**: Support for both manual text entry and image uploads.
 
 ### Endpoints
 
@@ -46,12 +54,34 @@ Accepts either `multipart/form-data` (file upload) or JSON/Form data.
 - Key: `file`
 - Value: `[Upload Image File]`
 
+### Output Format (Pipeline Steps)
+The API returns a detailed JSON object broken down by pipeline steps:
+
+1.  **Step 1: OCR Output** - Raw text and confidence.
+2.  **Step 2: Entities** - Extracted date, time, and department phrases.
+3.  **Step 3: Normalization** - Standardized ISO date/time and timezone.
+4.  **Step 4: Final Appointment** - The structured object ready for database insertion.
+
 ### Example Response
 ```json
 {
+  "raw_text": "Book dentist next Friday at 3pm",
+  "ocr_confidence": 1,
+  "entities": {
+    "date_phrase": "next Friday",
+    "time_phrase": "3pm",
+    "department": "dentist"
+  },
+  "entities_confidence": 0.85,
+  "normalized": {
+    "date": "2026-01-16",
+    "time": "15:00",
+    "tz": "Asia/Kolkata"
+  },
+  "normalization_confidence": 0.9,
   "appointment": {
     "department": "Dentistry",
-    "date": "2025-09-26",
+    "date": "2026-01-16",
     "time": "15:00",
     "tz": "Asia/Kolkata"
   },

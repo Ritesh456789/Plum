@@ -5,15 +5,131 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Appointment Scheduler</title>
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .container { border: 1px solid #ccc; padding: 20px; border-radius: 8px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        textarea, input[type="file"] { width: 100%; padding: 8px; margin-top: 5px; }
-        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
-        button:hover { background-color: #0056b3; }
-        #result { margin-top: 20px; white-space: pre-wrap; background: #f4f4f4; padding: 10px; border-radius: 4px; }
-        .loading { display: none; color: #666; }
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f4f7f6; 
+            color: #333;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2.2rem;
+        }
+        .container { 
+            background: white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 600px; /* Improved size constraint */
+        }
+        .form-group { margin-bottom: 25px; }
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600; 
+            color: #555;
+            font-size: 0.95rem;
+        }
+        textarea, input[type="file"] { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #eef2f1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            font-family: inherit;
+            resize: vertical;
+        }
+        textarea:focus, input[type="file"]:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        .divider {
+            text-align: center; 
+            margin: 20px 0; 
+            color: #999;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        .divider::before, .divider::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid #eee;
+        }
+        .divider::before { margin-right: 15px; }
+        .divider::after { margin-left: 15px; }
+
+        button { 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 14px 20px; 
+            cursor: pointer; 
+            border-radius: 8px; 
+            width: 100%;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,123,255,0.2);
+        }
+        button:hover { 
+            background-color: #0056b3; 
+            transform: translateY(-1px);
+            box-shadow: 0 6px 8px rgba(0,123,255,0.3);
+        }
+        button:active { transform: translateY(0); }
+
+        #resultContainer { margin-top: 30px; border-top: 2px solid #f0f0f0; padding-top: 20px; }
+        #resultContainer h3 { color: #2c3e50; margin-bottom: 20px; text-align: center; }
+
+        .step-box { 
+            background: #fff; 
+            border: 1px solid #e1e4e8; 
+            border-radius: 8px; 
+            padding: 20px; 
+            margin-bottom: 15px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            transition: transform 0.2s;
+        }
+        .step-box:hover { transform: translateX(5px); border-left: 3px solid #007bff; }
+        
+        .step-title { 
+            font-weight: 700; 
+            margin-bottom: 12px; 
+            color: #444; 
+            border-bottom: 1px solid #f0f0f0; 
+            padding-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .loading { 
+            text-align: center; 
+            color: #666; 
+            margin-top: 15px; 
+            font-style: italic;
+        }
+        pre { 
+            margin: 0; 
+            white-space: pre-wrap; 
+            font-family: 'Consolas', 'Monaco', monospace; 
+            color: #2c3e50; 
+            font-size: 0.9rem;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+        }
     </style>
 </head>
 <body>
@@ -21,11 +137,11 @@
     
     <div class="container">
         <div class="form-group">
-            <label>Option 1: Enter Text</label>
+            <label>Option 1: Enter Natural Language</label>
             <textarea id="textInput" rows="3" placeholder="Ex: Book dentist next Friday at 3pm"></textarea>
         </div>
 
-        <div style="text-align: center; margin: 10px 0;">OR</div>
+        <div class="divider">OR</div>
 
         <div class="form-group">
             <label>Option 2: Upload Image</label>
@@ -37,12 +153,21 @@
         <p class="loading" id="loading">Processing... please wait (OCR might take a moment)</p>
         
         <div id="resultContainer" style="display:none;">
-            <h3>Final Structured Output</h3>
+            <h3>Pipeline Output</h3>
             <div id="result"></div>
         </div>
     </div>
 
     <script>
+        function renderStep(title, data) {
+            return `
+                <div class="step-box">
+                    <div class="step-title">${title}</div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+        }
+
         async function processAppointment() {
             const text = document.getElementById('textInput').value;
             const fileInput = document.getElementById('fileInput');
@@ -77,10 +202,42 @@
                 });
 
                 const data = await response.json();
-                resultDiv.innerText = JSON.stringify(data, null, 2);
+                
+                let html = '';
+
+                if (data.status === 'ok') {
+                    // Step 1: OCR
+                    html += renderStep('Step 1: OCR Output', {
+                        raw_text: data.raw_text,
+                        confidence: data.ocr_confidence
+                    });
+
+                    // Step 2: Entities
+                    html += renderStep('Step 2: Entities', {
+                        entities: data.entities,
+                        confidence: data.entities_confidence
+                    });
+
+                    // Step 3: Normalization
+                    html += renderStep('Step 3: Normalization', {
+                        normalized: data.normalized,
+                        confidence: data.normalization_confidence
+                    });
+
+                    // Step 4: Final Appointment
+                    html += renderStep('Step 4: Final Appointment', {
+                        appointment: data.appointment,
+                        status: data.status
+                    });
+                } else {
+                    // Handle Error/Clarification
+                     html += renderStep('Response', data);
+                }
+
+                resultDiv.innerHTML = html;
                 resultContainer.style.display = 'block';
             } catch (error) {
-                resultDiv.innerText = 'Error: ' + error.message;
+                resultDiv.innerHTML = `<div class="step-box" style="color:red">Error: ${error.message}</div>`;
                 resultContainer.style.display = 'block';
             } finally {
                 loading.style.display = 'none';
