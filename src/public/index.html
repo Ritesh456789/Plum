@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Appointment Scheduler</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { border: 1px solid #ccc; padding: 20px; border-radius: 8px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        textarea, input[type="file"] { width: 100%; padding: 8px; margin-top: 5px; }
+        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
+        button:hover { background-color: #0056b3; }
+        #result { margin-top: 20px; white-space: pre-wrap; background: #f4f4f4; padding: 10px; border-radius: 4px; }
+        .loading { display: none; color: #666; }
+    </style>
+</head>
+<body>
+    <h1>AI-Powered Appointment Scheduler</h1>
+    
+    <div class="container">
+        <div class="form-group">
+            <label>Option 1: Enter Text</label>
+            <textarea id="textInput" rows="3" placeholder="Ex: Book dentist next Friday at 3pm"></textarea>
+        </div>
+
+        <div style="text-align: center; margin: 10px 0;">OR</div>
+
+        <div class="form-group">
+            <label>Option 2: Upload Image</label>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+
+        <button onclick="processAppointment()">Process Request</button>
+        
+        <p class="loading" id="loading">Processing... please wait (OCR might take a moment)</p>
+        
+        <div id="resultContainer" style="display:none;">
+            <h3>Final Structured Output</h3>
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        async function processAppointment() {
+            const text = document.getElementById('textInput').value;
+            const fileInput = document.getElementById('fileInput');
+            const resultDiv = document.getElementById('result');
+            const resultContainer = document.getElementById('resultContainer');
+            const loading = document.getElementById('loading');
+            
+            resultContainer.style.display = 'none';
+            loading.style.display = 'block';
+
+            try {
+                let body;
+                let headers = {};
+
+                if (fileInput.files.length > 0) {
+                    const formData = new FormData();
+                    formData.append('file', fileInput.files[0]);
+                    body = formData;
+                } else if (text) {
+                    body = JSON.stringify({ text: text });
+                    headers = { 'Content-Type': 'application/json' };
+                } else {
+                    alert('Please enter text or upload an image');
+                    loading.style.display = 'none';
+                    return;
+                }
+
+                const response = await fetch('/process-appointment', {
+                    method: 'POST',
+                    headers: headers,
+                    body: body
+                });
+
+                const data = await response.json();
+                resultDiv.innerText = JSON.stringify(data, null, 2);
+                resultContainer.style.display = 'block';
+            } catch (error) {
+                resultDiv.innerText = 'Error: ' + error.message;
+                resultContainer.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

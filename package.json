@@ -1,0 +1,22 @@
+{
+  "name": "ai-appointment-scheduler-node",
+  "version": "1.0.0",
+  "description": "AI-Powered Appointment Scheduler with Node.js",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "chrono-node": "^2.7.0",
+    "dayjs": "^1.11.10",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "tesseract.js": "^5.0.3",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
